@@ -2,12 +2,12 @@ package com.bridgelabz;
 
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 //Creating AddressBookDBService Class
 public class AddressBookDBService {
-
     private static AddressBookDBService addressBookDBService;
     private static PreparedStatement addressBookDataStatement;
     private static PreparedStatement prepareStatement;
@@ -17,7 +17,7 @@ public class AddressBookDBService {
             addressBookDBService = new AddressBookDBService();
         return addressBookDBService;
     }
-    //Establishing the connection
+
     private Connection getConnection() throws SQLException {
         String jdbcURL = "jdbc:mysql://localhost:3306/address_book?useSSL=false";
         String userName = "root";
@@ -35,13 +35,13 @@ public class AddressBookDBService {
         try (Connection connection = this.getConnection()) {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);
-            addressBookList = this.getEmployeePayrollData(resultSet);
+            addressBookList = this.getPersonData(resultSet);
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return addressBookList;
     }
-    //
+
     public int updateContactDetails(String name, String address) {
         String sql = String.format("update address_book set address = '%s' where firstName = '%s';", address, name);
         try (Connection connection = this.getConnection()) {
@@ -61,7 +61,7 @@ public class AddressBookDBService {
         try {
             addressBookDataStatement.setString(1, name);
             ResultSet resultSet = addressBookDataStatement.executeQuery();
-            employeePayrollList = this.getEmployeePayrollData(resultSet);
+            employeePayrollList = this.getPersonData(resultSet);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -79,7 +79,7 @@ public class AddressBookDBService {
         return null;
     }
 
-    private List<AddressBookData> getEmployeePayrollData(ResultSet resultSet) {
+    private List<AddressBookData> getPersonData(ResultSet resultSet) {
         List<AddressBookData> addressBookList = new ArrayList<>();
         try {
             while (resultSet.next()) {
@@ -98,5 +98,22 @@ public class AddressBookDBService {
             e.printStackTrace();
         }
         return addressBookList;
+    }
+
+    private List<AddressBookData> getPersonDataUsingDB(String sql) {
+        List<AddressBookData> addressBookList = new ArrayList<>();
+        try (Connection connection = this.getConnection()) {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql);
+            addressBookList = this.getPersonData(resultSet);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return addressBookList;
+    }
+
+    public List<AddressBookData> getPersonDataForDateRange(LocalDate startDate, LocalDate endDate) {
+        String sql = String.format("SELECT * FROM address_book WHERE START BETWEEN '%s' AND '%s';", Date.valueOf(startDate), Date.valueOf(endDate));
+        return this.getPersonDataUsingDB(sql);
     }
 }
